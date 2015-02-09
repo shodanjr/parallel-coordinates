@@ -97,8 +97,10 @@ pc.toggleLogScale = function(d) {
 			extent[0] += 0.05;
 		}
 		yscale[d] = d3.scale.log()
+		.base(Math.E)
 		.domain(extent)
-		.range([h()+1, 1]);
+		.range([h()+1, 1])
+		.nice();
 		yscale[d].type = 'LOG';
 	} else if (curScale.type === 'LOG') {
 		yscale[d] = d3.scale.linear()
