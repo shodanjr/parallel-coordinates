@@ -12,6 +12,20 @@ function flipAxisAndUpdatePCP(dimension) {
   if (flags.shadows) paths(__.data, ctx.shadows);
 }
 
+function toggleLogScaleAndUpdatePCP(dimension) {
+  var g = pc.svg.selectAll(".dimension");
+  
+  pc.toggleLogScale(dimension);
+  
+  d3.select(this.parentElement)
+    .transition()
+      .duration(1100)
+      .call(axis.scale(yscale[dimension]));
+
+  pc.render();
+  if (flags.shadows) paths(__.data, ctx.shadows);
+}
+
 function rotateLabels() {
   var delta = d3.event.deltaY;
   delta = delta < 0 ? -5 : delta;
@@ -49,7 +63,8 @@ pc.createAxes = function() {
       .text(function(d) {
         return d in __.dimensionTitles ? __.dimensionTitles[d] : d;  // dimension display names
       })
-      .on("dblclick", flipAxisAndUpdatePCP)
+      .on("click", toggleLogScaleAndUpdatePCP)
+      //.on("dblclick", flipAxisAndUpdatePCP)
       .on("wheel", rotateLabels);
 
   flags.axes= true;
@@ -82,7 +97,8 @@ pc.updateAxes = function() {
         "class": "label"
       })
       .text(String)
-      .on("dblclick", flipAxisAndUpdatePCP)
+      .on("click", toggleLogScaleAndUpdatePCP)
+      //.on("dblclick", flipAxisAndUpdatePCP)
       .on("wheel", rotateLabels);
 
   // Update

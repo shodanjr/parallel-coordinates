@@ -153,9 +153,11 @@ pc.autoscale = function() {
         .range([h()+1, 1]);
     },
     "number": function(k) {
-      return d3.scale.linear()
+      var scale = d3.scale.linear()
         .domain(d3.extent(__.data, function(d) { return +d[k]; }))
         .range([h()+1, 1]);
+      scale.type = 'LINEAR';
+      return scale;
     },
     "string": function(k) {
       var counts = {},
@@ -222,6 +224,32 @@ pc.autoscale = function() {
 pc.scale = function(d, domain) {
 	yscale[d].domain(domain);
 
+	return this;
+};
+
+pc.toggleLogScale = function(d) {
+	console.log('autoscale' + d);
+	var curScale = yscale[d];
+	if (!curScale.hasOwnProperty('type')) {
+		// this should only work for numerical scales
+		return this;
+	}
+	var extent = d3.extent(__.data, function(datum) { return +datum[d]; });
+	if (curScale.type === 'LINEAR') {
+		// log() is not defined for x === 0 so we hack this with a small offset
+		if (extent[0] === 0) {
+			extent[0] += 0.05;
+		}
+		yscale[d] = d3.scale.log()
+		.domain(extent)
+		.range([h()+1, 1]);
+		yscale[d].type = 'LOG';
+	} else if (curScale.type === 'LOG') {
+		yscale[d] = d3.scale.linear()
+		.domain(extent)
+		.range([h()+1, 1]);
+		yscale[d].type = 'LINEAR';
+	} 
 	return this;
 };
 
@@ -517,6 +545,20 @@ function flipAxisAndUpdatePCP(dimension) {
   if (flags.shadows) paths(__.data, ctx.shadows);
 }
 
+function toggleLogScaleAndUpdatePCP(dimension) {
+  var g = pc.svg.selectAll(".dimension");
+  
+  pc.toggleLogScale(dimension);
+  
+  d3.select(this.parentElement)
+    .transition()
+      .duration(1100)
+      .call(axis.scale(yscale[dimension]));
+
+  pc.render();
+  if (flags.shadows) paths(__.data, ctx.shadows);
+}
+
 function rotateLabels() {
   var delta = d3.event.deltaY;
   delta = delta < 0 ? -5 : delta;
@@ -554,7 +596,8 @@ pc.createAxes = function() {
       .text(function(d) {
         return d in __.dimensionTitles ? __.dimensionTitles[d] : d;  // dimension display names
       })
-      .on("dblclick", flipAxisAndUpdatePCP)
+      .on("click", toggleLogScaleAndUpdatePCP)
+      //.on("dblclick", flipAxisAndUpdatePCP)
       .on("wheel", rotateLabels);
 
   flags.axes= true;
@@ -587,7 +630,8 @@ pc.updateAxes = function() {
         "class": "label"
       })
       .text(String)
-      .on("dblclick", flipAxisAndUpdatePCP)
+      .on("click", toggleLogScaleAndUpdatePCP)
+      //.on("dblclick", flipAxisAndUpdatePCP)
       .on("wheel", rotateLabels);
 
   // Update

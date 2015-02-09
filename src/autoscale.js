@@ -9,9 +9,11 @@ pc.autoscale = function() {
         .range([h()+1, 1]);
     },
     "number": function(k) {
-      return d3.scale.linear()
+      var scale = d3.scale.linear()
         .domain(d3.extent(__.data, function(d) { return +d[k]; }))
         .range([h()+1, 1]);
+      scale.type = 'LINEAR';
+      return scale;
     },
     "string": function(k) {
       var counts = {},
@@ -78,6 +80,32 @@ pc.autoscale = function() {
 pc.scale = function(d, domain) {
 	yscale[d].domain(domain);
 
+	return this;
+};
+
+pc.toggleLogScale = function(d) {
+	console.log('autoscale' + d);
+	var curScale = yscale[d];
+	if (!curScale.hasOwnProperty('type')) {
+		// this should only work for numerical scales
+		return this;
+	}
+	var extent = d3.extent(__.data, function(datum) { return +datum[d]; });
+	if (curScale.type === 'LINEAR') {
+		// log() is not defined for x === 0 so we hack this with a small offset
+		if (extent[0] === 0) {
+			extent[0] += 0.05;
+		}
+		yscale[d] = d3.scale.log()
+		.domain(extent)
+		.range([h()+1, 1]);
+		yscale[d].type = 'LOG';
+	} else if (curScale.type === 'LOG') {
+		yscale[d] = d3.scale.linear()
+		.domain(extent)
+		.range([h()+1, 1]);
+		yscale[d].type = 'LINEAR';
+	} 
 	return this;
 };
 
