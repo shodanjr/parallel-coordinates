@@ -228,7 +228,6 @@ pc.scale = function(d, domain) {
 };
 
 pc.toggleLogScale = function(d) {
-	console.log('autoscale' + d);
 	var curScale = yscale[d];
 	if (!curScale.hasOwnProperty('type')) {
 		// this should only work for numerical scales
